@@ -7,21 +7,48 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
 {
     public override Task<Response> Unary(Request request, ServerCallContext context)
     {
-        return base.Unary(request, context);
+        var response = new Response() { Message = request.Content + " from server" };
+
+        return Task.FromResult(response);
     }
 
-    public override Task<Response> ClientStream(IAsyncStreamReader<Request> requestStream, ServerCallContext context)
+    public override async Task<Response> ClientStream(IAsyncStreamReader<Request> requestStream, ServerCallContext context)
     {
-        return base.ClientStream(requestStream, context);
+        var response = new Response() { Message = "I got" };
+
+        while (await requestStream.MoveNext())
+        {
+
+            var payload = requestStream.Current;
+
+            Console.WriteLine(payload);
+
+            response.Message = payload.ToString();
+        }
+
+        return response;
     }
 
-    public override Task ServerStream(Request request, IServerStreamWriter<Response> responseStream, ServerCallContext context)
+    public override async Task ServerStream(Request request, IServerStreamWriter<Response> responseStream, ServerCallContext context)
     {
-        return base.ServerStream(request, responseStream, context);
+        for (var i = 0; i < 100; i++)
+        {
+            var response = new Response() { Message = $"message {i + 1}" };
+            await responseStream.WriteAsync(response);
+        }
     }
 
-    public override Task BiDirectionalStream(IAsyncStreamReader<Request> requestStream, IServerStreamWriter<Response> responseStream, ServerCallContext context)
+    public override async Task BiDirectionalStream(IAsyncStreamReader<Request> requestStream, IServerStreamWriter<Response> responseStream, ServerCallContext context)
     {
-        return base.BiDirectionalStream(requestStream, responseStream, context);
+        var response = new Response();
+
+        while (await requestStream.MoveNext())
+        {
+            var payload = requestStream.Current;
+
+            response.Message = payload.ToString();
+
+            await responseStream.WriteAsync(response);
+        }
     }
 }
