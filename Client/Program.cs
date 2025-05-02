@@ -9,6 +9,19 @@ using static Grpc.Core.Metadata;
 
 Console.WriteLine("Client running");
 
+var retryPolicy = new MethodConfig
+{
+    Names = { MethodName.Default },
+    RetryPolicy = new RetryPolicy
+    {
+        MaxAttempts = 5,
+        InitialBackoff = TimeSpan.FromSeconds(1),
+        MaxBackoff = TimeSpan.FromSeconds(5),
+        BackoffMultiplier = 1.5,
+        RetryableStatusCodes = { StatusCode.Internal, StatusCode.Unavailable, StatusCode.Aborted, StatusCode.DeadlineExceeded, StatusCode.ResourceExhausted, StatusCode.Unknown }
+
+    }
+};
 
 var factory = new StaticResolverFactory(addr => new[] {
 
@@ -22,7 +35,10 @@ services.AddSingleton<ResolverFactory>(factory);
 
 var options = new GrpcChannelOptions()
 {
-
+    ServiceConfig = new ServiceConfig
+    {
+        MethodConfigs = { retryPolicy }
+    }
 };
 
 using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
@@ -48,7 +64,7 @@ try
     //await ServerStreaming(client);
     //await BiDirectionalStreaming(client);
 }
-catch (Exception e)
+catch (RpcException e)
 {
     Console.WriteLine(e);
 }
