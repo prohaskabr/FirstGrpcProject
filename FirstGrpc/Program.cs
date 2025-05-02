@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc(option => {
 
     option.Interceptors.Add<ServerLoggerInterceptor>();
+    option.ResponseCompressionAlgorithm = "gzip";
+    option.ResponseCompressionLevel = System.IO.Compression.CompressionLevel.SmallestSize;
 });
 
 var app = builder.Build();

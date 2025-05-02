@@ -17,9 +17,9 @@ var client = new FirstServiceDefinition.FirstServiceDefinitionClient(channel);
 
 try
 {
-    //Unary(client);
+    Unary(client);
     //await ClientStreaming(client);
-    await ServerStreaming(client);
+    //await ServerStreaming(client);
     //await BiDirectionalStreaming(client);
 }
 catch (Exception e)
@@ -33,10 +33,10 @@ Console.ReadLine();
 
 void Unary(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
-
+    var metadata = new Metadata { {"grpc-accept-encoding","gzip" } };
     var request = new Request() { Content = "Hello unary" };
 
-    var response = client.Unary(request, deadline: DateTime.UtcNow.AddSeconds(5));
+    var response = client.Unary(request, headers: metadata, deadline: DateTime.UtcNow.AddSeconds(5));
 
     Console.WriteLine(response.Message);
 }
