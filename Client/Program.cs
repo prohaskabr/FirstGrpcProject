@@ -23,6 +23,17 @@ var retryPolicy = new MethodConfig
     }
 };
 
+var hedging = new MethodConfig
+{
+    Names = { MethodName.Default },
+    HedgingPolicy = new HedgingPolicy
+    {
+        MaxAttempts = 5,      
+        NonFatalStatusCodes = { StatusCode.Internal, StatusCode.Unavailable, StatusCode.Aborted, StatusCode.DeadlineExceeded, StatusCode.ResourceExhausted, StatusCode.Unknown },
+        HedgingDelay = TimeSpan.FromSeconds(1),
+    }
+};
+
 var factory = new StaticResolverFactory(addr => new[] {
 
     new BalancerAddress("localhost",5057),
@@ -78,7 +89,7 @@ void Unary(FirstServiceDefinition.FirstServiceDefinitionClient client)
     var metadata = new Metadata { { "grpc-accept-encoding", "gzip" } };
     var request = new Request() { Content = "Hello unary" };
 
-    var response = client.Unary(request, headers: metadata, deadline: DateTime.UtcNow.AddSeconds(5));
+    var response = client.Unary(request, headers: metadata);
 
     Console.WriteLine(response.Message);
 }
