@@ -70,9 +70,15 @@ async Task ServerStreaming(FirstServiceDefinition.FirstServiceDefinitionClient c
     await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
     {
         Console.WriteLine(response.Message);
-
-
     }
+
+    var myTrailers = streamingcall.GetTrailers();
+
+    foreach (var item in myTrailers)
+    {
+        Console.WriteLine($"trailer key: {item.Key}, value: {item.Value}");
+    }
+
 }
 async Task BiDirectionalStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {

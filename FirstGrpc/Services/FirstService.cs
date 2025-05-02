@@ -31,12 +31,15 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
 
     public override async Task ServerStream(Request request, IServerStreamWriter<Response> responseStream, ServerCallContext context)
     {
-        var keyValue = context.RequestHeaders.Get("my-key");
+        //var keyValue = context.RequestHeaders.Get("my-key");
 
-        if (keyValue is not null)
-        {
-            Console.WriteLine($"Key: {keyValue.Key}, value: {keyValue.Value}");
-        }
+        //if (keyValue is not null)
+        //{
+        //    Console.WriteLine($"got Key: {keyValue.Key}, value: {keyValue.Value}");
+        //}
+
+        var myTrailer = new Metadata.Entry("a-trailer", "trailer value");
+        context.ResponseTrailers.Add(myTrailer);
 
         for (var i = 0; i < 10; i++)
         {
