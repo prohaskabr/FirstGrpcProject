@@ -22,35 +22,28 @@ services.AddSingleton<ResolverFactory>(factory);
 
 var options = new GrpcChannelOptions()
 {
-    
+
 };
 
-//using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
+using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
 
-var channel = GrpcChannel.ForAddress("static://localhost", new GrpcChannelOptions()
-{
+//var channel = GrpcChannel.ForAddress("static://localhost", new GrpcChannelOptions()
+//{
 
-    Credentials = ChannelCredentials.Insecure,
-    ServiceConfig = new ServiceConfig
-    {
-        LoadBalancingConfigs = { new RoundRobinConfig() },
-    },
-    ServiceProvider = services.BuildServiceProvider(),
+//    Credentials = ChannelCredentials.Insecure,
+//    ServiceConfig = new ServiceConfig
+//    {
+//        LoadBalancingConfigs = { new RoundRobinConfig() },
+//    },
+//    ServiceProvider = services.BuildServiceProvider(),
 
-});
+//});
 
 var client = new FirstServiceDefinition.FirstServiceDefinitionClient(channel);
 
 try
 {
-    for (int i = 0; i < 10; i++)
-    {
-        Unary(client);
-
-        await Task.Delay(1000);
-    }
-
-    
+    Unary(client);
     //await ClientStreaming(client);
     //await ServerStreaming(client);
     //await BiDirectionalStreaming(client);
