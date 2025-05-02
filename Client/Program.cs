@@ -2,7 +2,6 @@
 using Basics;
 using Grpc.Core;
 using Grpc.Net.Client;
-using System.Threading.Tasks;
 
 Console.WriteLine("Hello, World!");
 
@@ -15,10 +14,18 @@ using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
 
 var client = new FirstServiceDefinition.FirstServiceDefinitionClient(channel);
 
-//Unary(client);
-//await ClientStreaming(client);
-//await ServerStreaming(client);
-await BiDirectionalStreaming(client);
+try
+{
+    //Unary(client);
+    //await ClientStreaming(client);
+    await ServerStreaming(client);
+    //await BiDirectionalStreaming(client);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e);
+}
+
 
 Console.ReadLine();
 
@@ -28,7 +35,7 @@ void Unary(FirstServiceDefinition.FirstServiceDefinitionClient client)
 
     var request = new Request() { Content = "Hello unary" };
 
-    var response = client.Unary(request);
+    var response = client.Unary(request, deadline: DateTime.UtcNow.AddSeconds(5));
 
     Console.WriteLine(response.Message);
 }
@@ -52,21 +59,35 @@ async Task ClientStreaming(FirstServiceDefinition.FirstServiceDefinitionClient c
 
 async Task ServerStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
-    using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" });
-
-    await foreach (var item in streamingcall.ResponseStream.ReadAllAsync())
+    try
     {
-        Console.WriteLine(item.Message);
+        var cts = new CancellationTokenSource();
+        using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" });
+
+        await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
+        {
+            Console.WriteLine(response.Message);
+
+            if (response.Message.Contains("3"))
+                cts.Cancel();
+        }
+    }
+    catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+    {
+        Console.WriteLine(ex);
     }
 }
 
-async Task BiDirectionalStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client) {
+async Task BiDirectionalStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
+{
 
-    using (var call = client.BiDirectionalStream()) {
+    using (var call = client.BiDirectionalStream())
+    {
 
         var request = new Request();
 
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 10; i++)
+        {
 
             request.Content = $" Request {i}";
             Console.WriteLine($"client - {request.Content}");

@@ -33,6 +33,9 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
     {
         for (var i = 0; i < 10; i++)
         {
+            if(context.CancellationToken.IsCancellationRequested)
+                return;
+
             var response = new Response() { Message = $"{request.Content} -> reply {i + 1}" };
             await responseStream.WriteAsync(response);
             await Task.Delay(100);
