@@ -3,14 +3,15 @@ using Grpc.Core;
 
 namespace FirstGrpc.Services;
 
-public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
+public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase, IFirstService
 {
     public override Task<Response> Unary(Request request, ServerCallContext context)
     {
-        if (!context.RequestHeaders.Any(x => x.Key.Equals("grpc-previous-rpc-attempts")))
-        {
-            throw new RpcException(new Status(StatusCode.Internal, "not retry"));
-        }
+        //for retry test
+        //if (!context.RequestHeaders.Any(x => x.Key.Equals("grpc-previous-rpc-attempts")))
+        //{
+        //    throw new RpcException(new Status(StatusCode.Internal, "not retry"));
+        //}
 
         context.WriteOptions = new WriteOptions(WriteFlags.NoCompress);
         var response = new Response() { Message = $"{request.Content} from server {context.Host}" };
