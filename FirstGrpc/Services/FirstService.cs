@@ -31,10 +31,11 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
 
     public override async Task ServerStream(Request request, IServerStreamWriter<Response> responseStream, ServerCallContext context)
     {
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 10; i++)
         {
-            var response = new Response() { Message = $"message {i + 1}" };
+            var response = new Response() { Message = $"{request.Content} -> reply {i + 1}" };
             await responseStream.WriteAsync(response);
+            await Task.Delay(100);
         }
     }
 
