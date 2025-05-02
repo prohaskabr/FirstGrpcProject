@@ -31,9 +31,16 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
 
     public override async Task ServerStream(Request request, IServerStreamWriter<Response> responseStream, ServerCallContext context)
     {
+        var keyValue = context.RequestHeaders.Get("my-key");
+
+        if (keyValue is not null)
+        {
+            Console.WriteLine($"Key: {keyValue.Key}, value: {keyValue.Value}");
+        }
+
         for (var i = 0; i < 10; i++)
         {
-            if(context.CancellationToken.IsCancellationRequested)
+            if (context.CancellationToken.IsCancellationRequested)
                 return;
 
             var response = new Response() { Message = $"{request.Content} -> reply {i + 1}" };

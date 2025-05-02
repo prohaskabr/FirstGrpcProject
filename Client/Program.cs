@@ -2,8 +2,9 @@
 using Basics;
 using Grpc.Core;
 using Grpc.Net.Client;
+using static Grpc.Core.Metadata;
 
-Console.WriteLine("Hello, World!");
+Console.WriteLine("Client running");
 
 var options = new GrpcChannelOptions()
 {
@@ -59,25 +60,20 @@ async Task ClientStreaming(FirstServiceDefinition.FirstServiceDefinitionClient c
 
 async Task ServerStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
-    try
-    {
-        var cts = new CancellationTokenSource();
-        using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" });
+    var cts = new CancellationTokenSource();
+    var metadata = new Metadata();
+    metadata.Add(new Entry("my-key", "my-value"));
+    metadata.Add(new Entry("second-key", "other value"));
 
-        await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
-        {
-            Console.WriteLine(response.Message);
+    using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" }, headers: metadata);
 
-            if (response.Message.Contains("3"))
-                cts.Cancel();
-        }
-    }
-    catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+    await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
     {
-        Console.WriteLine(ex);
+        Console.WriteLine(response.Message);
+
+
     }
 }
-
 async Task BiDirectionalStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
 
