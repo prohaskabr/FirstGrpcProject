@@ -65,20 +65,31 @@ async Task ServerStreaming(FirstServiceDefinition.FirstServiceDefinitionClient c
     metadata.Add(new Entry("my-key", "my-value"));
     metadata.Add(new Entry("second-key", "other value"));
 
-    using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" }, headers: metadata);
-
-    await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
+    try
     {
-        Console.WriteLine(response.Message);
+        using var streamingcall = client.ServerStream(new Request { Content = "Hello from client" }, headers: metadata);
+
+        await foreach (var response in streamingcall.ResponseStream.ReadAllAsync(cts.Token))
+        {
+            Console.WriteLine(response.Message);
+        }
     }
-
-    var myTrailers = streamingcall.GetTrailers();
-
-    foreach (var item in myTrailers)
+    catch (RpcException ex) when(ex.StatusCode == StatusCode.Cancelled)
     {
-        Console.WriteLine($"trailer key: {item.Key}, value: {item.Value}");
+        Console.WriteLine($"Failed to send {ex.Message}");
     }
+    catch (RpcException ex) when (ex.StatusCode == StatusCode.PermissionDenied)
+    {
+        Console.WriteLine($"Permission denied {ex.Message}");
+    }
+    /*
+        var myTrailers = streamingcall.GetTrailers();
 
+        foreach (var item in myTrailers)
+        {
+            Console.WriteLine($"trailer key: {item.Key}, value: {item.Value}");
+        }
+    */
 }
 async Task BiDirectionalStreaming(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
