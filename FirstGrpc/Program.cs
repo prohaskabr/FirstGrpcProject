@@ -1,9 +1,14 @@
+using FirstGrpc.Interceptor;
 using FirstGrpc.Services;
+using Google.Protobuf.WellKnownTypes;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddGrpc();
+builder.Services.AddGrpc(option => {
+
+    option.Interceptors.Add<ServerLoggerInterceptor>();
+});
 
 var app = builder.Build();
 
