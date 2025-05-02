@@ -7,7 +7,8 @@ public class FirstService : FirstServiceDefinition.FirstServiceDefinitionBase
 {
     public override Task<Response> Unary(Request request, ServerCallContext context)
     {
-        var response = new Response() { Message = request.Content + " from server" };
+        context.WriteOptions = new WriteOptions(WriteFlags.NoCompress);
+        var response = new Response() { Message = $"{request.Content} from server {context.Host}"  };
 
         return Task.FromResult(response);
     }

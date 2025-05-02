@@ -2,22 +2,55 @@
 using Basics;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Grpc.Net.Client.Balancer;
+using Grpc.Net.Client.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using static Grpc.Core.Metadata;
 
 Console.WriteLine("Client running");
 
+
+var factory = new StaticResolverFactory(addr => new[] {
+
+    new BalancerAddress("localhost",5057),
+    new BalancerAddress("localhost",5058),
+
+});
+
+var services = new ServiceCollection();
+services.AddSingleton<ResolverFactory>(factory);
+
 var options = new GrpcChannelOptions()
 {
-
+    
 };
 
-using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
+//using var channel = GrpcChannel.ForAddress("https://localhost:7275", options);
+
+var channel = GrpcChannel.ForAddress("static://localhost", new GrpcChannelOptions()
+{
+
+    Credentials = ChannelCredentials.Insecure,
+    ServiceConfig = new ServiceConfig
+    {
+        LoadBalancingConfigs = { new RoundRobinConfig() },
+    },
+    ServiceProvider = services.BuildServiceProvider(),
+
+});
 
 var client = new FirstServiceDefinition.FirstServiceDefinitionClient(channel);
 
 try
 {
-    Unary(client);
+    for (int i = 0; i < 10; i++)
+    {
+        Unary(client);
+
+        await Task.Delay(1000);
+    }
+
+    
     //await ClientStreaming(client);
     //await ServerStreaming(client);
     //await BiDirectionalStreaming(client);
@@ -33,7 +66,7 @@ Console.ReadLine();
 
 void Unary(FirstServiceDefinition.FirstServiceDefinitionClient client)
 {
-    var metadata = new Metadata { {"grpc-accept-encoding","gzip" } };
+    var metadata = new Metadata { { "grpc-accept-encoding", "gzip" } };
     var request = new Request() { Content = "Hello unary" };
 
     var response = client.Unary(request, headers: metadata, deadline: DateTime.UtcNow.AddSeconds(5));
@@ -74,7 +107,7 @@ async Task ServerStreaming(FirstServiceDefinition.FirstServiceDefinitionClient c
             Console.WriteLine(response.Message);
         }
     }
-    catch (RpcException ex) when(ex.StatusCode == StatusCode.Cancelled)
+    catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
     {
         Console.WriteLine($"Failed to send {ex.Message}");
     }
