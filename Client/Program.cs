@@ -48,7 +48,7 @@ var options = new GrpcChannelOptions()
 {
     ServiceConfig = new ServiceConfig
     {
-        MethodConfigs = { retryPolicy }
+        MethodConfigs = { hedging }
     }
 };
 
